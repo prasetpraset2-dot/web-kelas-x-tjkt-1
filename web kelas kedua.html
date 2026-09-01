@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="id" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Kelas X TJKT 1</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome untuk Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root, [data-bs-theme="light"] {
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --text-main: #212529;
+            --input-bg: rgba(255,255,255,0.7);
+            --body-bg: #f0f2f5;
+        }
+
+        [data-bs-theme="dark"] {
+            --glass-bg: rgba(33, 37, 41, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --text-main: #f8f9fa;
+            --input-bg: rgba(0,0,0,0.4);
+            --body-bg: #121212;
+        }
+
+        body {
+            background-color: var(--body-bg);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            transition: background 0.5s ease, color 0.3s ease;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-main);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, background 0.3s, border 0.3s;
+        }
+        
+        .glass-card:hover { transform: translateY(-5px); }
+
+        .header-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            transition: background 0.3s, border 0.3s;
+        }
+
+        .clock-display { font-size: 1.5rem; font-weight: bold; color: #0d6efd; }
+
+        .day-title {
+            background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+            color: white;
+            padding: 10px;
+            border-radius: 14px 14px 0 0;
+            text-align: center;
+            font-weight: bold;
+            margin: -16px -16px 15px -16px;
+        }
+        
+        .day-title.bg-success { background: linear-gradient(135deg, #198754, #20c997) !important; }
+
+        .schedule-list li {
+            border-bottom: 1px dashed rgba(128,128,128,0.3);
+            padding: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .schedule-list li:last-child { border-bottom: none; }
+
+        .teacher-badge {
+            font-size: 0.75rem;
+            background-color: rgba(108, 117, 125, 0.2);
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .editable-input {
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            border-radius: 5px;
+            padding: 6px 10px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .editable-input:focus {
+            background: var(--glass-bg);
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 5px rgba(13,110,253,0.5);
+            color: var(--text-main);
+        }
+
+        .todo-item { cursor: pointer; }
+        .todo-item.done { text-decoration: line-through; opacity: 0.6; }
+
+        #img-logo { width: 55px; height: 55px; object-fit: cover; }
+
+        /* CSS KHUSUS GALERI */
+        .gallery-img-container {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            aspect-ratio: 1/1;
+            transition: transform 0.2s;
+        }
+        .gallery-img-container:hover {
+            transform: scale(1.02);
+        }
+        .gallery-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .btn-delete-img {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .gallery-img-container:hover .btn-delete-img {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar sticky-top header-glass py-2">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center">
+            <div class="d-flex align-items-center mb-2 mb-md-0">
+                <img id="img-logo" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230d6efd'><path d='M15 .5a.5.5 0 0 0-.724-.447l-8 4A.5.5 0 0 0 6 4.5v3.14L.342 9.526A.5.5 0 0 0 0 10v5.5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V14h1v1.5a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5zM2 11h1v1H2zm2 0h1v1H4zm-2 2h1v1H2zm2 0h1v1H4zm4-4h1v1H8zm2 0h1v1h-1zm-2 2h1v1H8zm2 0h1v1h-1zm2-8h1v1h-1zm0 2h1v1h-1zm0 2h1v1h-1zM8 5.56V6h1v1h-1v1h1v1h-1v1h1v1H7V7.06z'/></svg>" alt="Logo" class="me-3 rounded-circle shadow-sm bg-white p-1">
+                <div>
+                    <h2 class="m-0 fw-bold text-primary">X TJKT 1</h2>
+                    <small class="fw-bold opacity-75">SMKN 5 Samarinda</small>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center">
+                <div class="form-check form-switch me-4">
+                    <input class="form-check-input" type="checkbox" role="switch" id="darkModeToggle">
+                    <label class="form-check-label small fw-bold" for="darkModeToggle"><i class="fas fa-moon"></i> Gelap</label>
+                </div>
+                <div class="text-end">
+                    <div id="clock" class="clock-display">00:00:00</div>
+                    <div id="date" class="small fw-bold opacity-75">Hari, Tanggal</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4 pb-5">
+        
+        <div class="glass-card p-3 mb-4">
+            <h5 class="fw-bold mb-3"><i class="fas fa-palette text-primary me-2"></i>Pengaturan Tampilan</h5>
+            <div class="row g-3">
+                <div class="col-md-6 border-end border-secondary-subtle">
+                    <label class="form-label small fw-bold"><i class="fas fa-image me-1"></i>Ganti Background:</label>
+                    <input type="file" id="bg-upload" class="form-control form-control-sm text-body bg-body mb-2" accept="image/*">
+                    <button class="btn btn-outline-danger btn-sm w-100" onclick="resetBg()">Hapus Background</button>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold text-success"><i class="fas fa-school me-1"></i>Ganti Logo Sekolah:</label>
+                    <input type="file" id="logo-upload" class="form-control form-control-sm text-body bg-body mb-2" accept="image/*">
+                    <button class="btn btn-outline-danger btn-sm w-100" onclick="resetLogo()">Reset Logo Default</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="glass-card p-3 h-100">
+                    <h5 class="fw-bold mb-3 border-bottom border-secondary pb-2"><i class="fas fa-sitemap text-success me-2"></i>Struktur Kelas</h5>
+                    <p class="small mb-3 opacity-75">Ketik nama di bawah ini. Data akan otomatis tersimpan.</p>
+                    <div class="mb-2">
+                        <label class="small fw-bold mb-1 opacity-75">Wali Kelas</label>
+                        <input type="text" class="editable-input struct-input" id="struct-wali" placeholder="Nama Wali Kelas...">
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold mb-1 opacity-75">Ketua Kelas</label>
+                        <input type="text" class="editable-input struct-input" id="struct-ketua" placeholder="Nama Ketua Kelas...">
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold mb-1 opacity-75">Wakil Ketua</label>
+                        <input type="text" class="editable-input struct-input" id="struct-wakil" placeholder="Nama Wakil Ketua...">
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold mb-1 opacity-75">Sekretaris</label>
+                        <input type="text" class="editable-input struct-input" id="struct-sekretaris" placeholder="Nama Sekretaris...">
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold mb-1 opacity-75">Bendahara</label>
+                        <input type="text" class="editable-input struct-input" id="struct-bendahara" placeholder="Nama Bendahara...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8 mb-4">
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+                    <div class="col">
+                        <div class="glass-card p-3 h-100">
+                            <div class="day-title">Senin</div>
+                            <ul class="list-unstyled schedule-list m-0">
+                                <li>BING <span class="teacher-badge">Cecilia</span></li>
+                                <li>TJKT 2 <span class="teacher-badge">Jiono</span></li>
+                                <li>PROJ IPAS 2 <span class="teacher-badge">You Nisa' K.</span></li>
+                                <li>PKN <span class="teacher-badge">Eko Budi S.</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="glass-card p-3 h-100">
+                            <div class="day-title">Selasa</div>
+                            <ul class="list-unstyled schedule-list m-0">
+                                <li>BING <span class="teacher-badge">Cecilia</span></li>
+                                <li>PENJAS <span class="teacher-badge">Dede Purwanto</span></li>
+                                <li>PAI <span class="teacher-badge">Zulfikar</span></li>
+                                <li>BINDO <span class="teacher-badge">Amelia F.</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="glass-card p-3 h-100">
+                            <div class="day-title">Rabu</div>
+                            <ul class="list-unstyled schedule-list m-0">
+                                <li>MTK <span class="teacher-badge">Dewi Rosita</span></li>
+                                <li>TJKT 2/5 <span class="teacher-badge">Jiono/Andre P.</span></li>
+                                <li>SEJ (Sejarah) <span class="teacher-badge">Didit</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="glass-card p-3 h-100">
+                            <div class="day-title">Kamis</div>
+                            <ul class="list-unstyled schedule-list m-0">
+                                <li>PROJ IPAS 2 <span class="teacher-badge">You Nisa' K.</span></li>
+                                <li>SENBUD <span class="teacher-badge">Eko Budi S.</span></li>
+                                <li>BK <span class="teacher-badge">Agus Setiaji</span></li>
+                                <li>TJKT 5 <span class="teacher-badge">Andre Puji</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="glass-card p-3 h-100">
+                            <div class="day-title bg-success">Jumat</div>
+                            <ul class="list-unstyled schedule-list m-0">
+                                <li>INFOR <span class="teacher-badge">Dwi Susilowati</span></li>
+                                <li>ESKUL <span class="teacher-badge">-</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="glass-card p-4 h-100">
+                    <h5 class="fw-bold mb-3 border-bottom border-secondary pb-2"><i class="fas fa-chalkboard-teacher text-info me-2"></i>Daftar Guru Pengajar</h5>
+                    <div class="row small">
+                        <div class="col-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><b>BING:</b><br>Cecilia</li>
+                                <li class="mb-2"><b>TJKT 2:</b><br>Jiono</li>
+                                <li class="mb-2"><b>TJKT 5:</b><br>Andre Puji</li>
+                                <li class="mb-2"><b>PROJ IPAS 2:</b><br>You Nisa' K.</li>
+                                <li class="mb-2"><b>PKN / SENBUD:</b><br>Eko Budi S.</li>
+                            </ul>
+                        </div>
+                        <div class="col-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><b>PENJAS:</b><br>Dede Purwanto</li>
+                                <li class="mb-2"><b>PAI:</b><br>Zulfikar</li>
+                                <li class="mb-2"><b>BINDO:</b><br>Amelia F.</li>
+                                <li class="mb-2"><b>MTK:</b><br>Dewi Rosita</li>
+                                <li class="mb-2"><b>BK / INFOR:</b><br>Agus S. / Dwi S.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="glass-card p-4 h-100">
+                    <h5 class="fw-bold mb-3 border-bottom border-secondary pb-2"><i class="fas fa-tasks text-warning me-2"></i>Papan Tugas & Pengumuman</h5>
+                    <div class="d-flex mb-3">
+                        <input type="text" id="todo-input" class="form-control me-2 text-body bg-body" placeholder="Tambah tugas / PR baru...">
+                        <button class="btn btn-primary fw-bold" onclick="tambahTodo()">Tambah</button>
+                    </div>
+                    <ul class="list-group" id="todo-list"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="glass-card p-4 h-100">
+                    <h5 class="fw-bold mb-3 border-bottom border-secondary pb-2"><i class="fas fa-broom text-success me-2"></i>Jadwal Piket Kelas</h5>
+                    <div class="row small">
+                        <div class="col-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-3"><b>Senin:</b><br><textarea class="editable-input struct-input mt-1" id="piket-senin" rows="2" placeholder="Nama piket..."></textarea></li>
+                                <li class="mb-3"><b>Selasa:</b><br><textarea class="editable-input struct-input mt-1" id="piket-selasa" rows="2" placeholder="Nama piket..."></textarea></li>
+                                <li class="mb-3"><b>Rabu:</b><br><textarea class="editable-input struct-input mt-1" id="piket-rabu" rows="2" placeholder="Nama piket..."></textarea></li>
+                            </ul>
+                        </div>
+                        <div class="col-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-3"><b>Kamis:</b><br><textarea class="editable-input struct-input mt-1" id="piket-kamis" rows="2" placeholder="Nama piket..."></textarea></li>
+                                <li class="mb-3"><b>Jumat:</b><br><textarea class="editable-input struct-input mt-1" id="piket-jumat" rows="2" placeholder="Nama piket..."></textarea></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="glass-card p-4 h-100">
+                    <h5 class="fw-bold mb-3 border-bottom border-secondary pb-2"><i class="fas fa-wallet text-info me-2"></i>Struktur Kas Kelas</h5>
+                    <p class="small mb-3 opacity-75">Kalkulasi otomatis dana keuangan kelas.</p>
+                    <div class="mb-2">
+                        <label class="small fw-bold mb-1 opacity-75">Saldo Bulan Lalu (Rp)</label>
+                        <input type="number" class="editable-input bg-body" id="kas-awal" oninput="hitungKas()" placeholder="0">
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold mb-1 opacity-75">Total Pemasukan Baru (Rp)</label>
+                        <input type="number" class="editable-input bg-body" id="kas-masuk" oninput="hitungKas()" placeholder="0">
+                    </div>
+                    <div class="mb-2">
+                        <label class="small fw-bold mb-1 opacity-75">Total Pengeluaran (Rp)</label>
+                        <input type="number" class="editable-input bg-body" id="kas-keluar" oninput="hitungKas()" placeholder="0">
+                    </div>
+                    <div class="mt-4 p-3 rounded text-center" style="background: rgba(13,110,253,0.1); border: 1px dashed #0d6efd;">
+                        <span class="small fw-bold opacity-75 d-block mb-1">Total Saldo Kas Saat Ini:</span>
+                        <h4 class="fw-bold mb-0 text-primary" id="kas-total">Rp 0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FITUR BARU: GALERI KELAS -->
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-3">
+                        <h5 class="fw-bold m-0"><i class="fas fa-images text-danger me-2"></i>Galeri Memori Kelas</h5>
+                        <div>
+                            <input type="file" id="gallery-upload" class="d-none" accept="image/*" multiple>
+                            <button class="btn btn-primary btn-sm fw-bold" onclick="document.getElementById('gallery-upload').click()">
+                                <i class="fas fa-cloud-upload-alt me-1"></i> Upload Foto
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm fw-bold ms-2" onclick="hapusSemuaGaleri()">Hapus Semua</button>
+                        </div>
+                    </div>
+                    <p class="small opacity-75 mb-3">Unggah foto momen kelasmu di sini! (Foto akan otomatis dikompresi agar tidak membuat browser penuh).</p>
+                    
+                    <!-- Grid Galeri -->
+                    <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-3" id="gallery-grid">
+                        <!-- Foto akan muncul di sini via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- TEMA GELAP ---
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const savedTheme = localStorage.getItem('tjkt1_theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        darkModeToggle.checked = savedTheme === 'dark';
+
+        darkModeToggle.addEventListener('change', () => {
+            const newTheme = darkModeToggle.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('tjkt1_theme', newTheme);
+        });
+
+        // --- JAM & TANGGAL ---
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('date').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        // --- AUTOSAVE STRUKTUR & PIKET ---
+        const structInputs = document.querySelectorAll('.struct-input');
+        structInputs.forEach(input => {
+            const savedValue = localStorage.getItem('tjkt1_' + input.id);
+            if(savedValue) input.value = savedValue;
+            input.addEventListener('input', function() { localStorage.setItem('tjkt1_' + this.id, this.value); });
+        });
+
+        // --- KAS KELAS ---
+        function hitungKas() {
+            const awal = parseFloat(document.getElementById('kas-awal').value) || 0;
+            const masuk = parseFloat(document.getElementById('kas-masuk').value) || 0;
+            const keluar = parseFloat(document.getElementById('kas-keluar').value) || 0;
+            const total = awal + masuk - keluar;
+            
+            document.getElementById('kas-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            
+            localStorage.setItem('tjkt1_kas_awal', document.getElementById('kas-awal').value);
+            localStorage.setItem('tjkt1_kas_masuk', document.getElementById('kas-masuk').value);
+            localStorage.setItem('tjkt1_kas_keluar', document.getElementById('kas-keluar').value);
+        }
+        
+        document.getElementById('kas-awal').value = localStorage.getItem('tjkt1_kas_awal') || '';
+        document.getElementById('kas-masuk').value = localStorage.getItem('tjkt1_kas_masuk') || '';
+        document.getElementById('kas-keluar').value = localStorage.getItem('tjkt1_kas_keluar') || '';
+        hitungKas();
+
+        // --- LOGO & BACKGROUND ---
+        const imgLogo = document.getElementById('img-logo');
+        const defaultLogoSVG = imgLogo.src;
+        if(localStorage.getItem('tjkt1_logo')) imgLogo.src = localStorage.getItem('tjkt1_logo');
+
+        document.getElementById('logo-upload').addEventListener('change', function(e) {
+            if(e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imgLogo.src = event.target.result;
+                    try { localStorage.setItem('tjkt1_logo', event.target.result); } 
+                    catch(err) { alert("File terlalu besar."); }
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        function resetLogo() { imgLogo.src = defaultLogoSVG; localStorage.removeItem('tjkt1_logo'); document.getElementById('logo-upload').value = ""; }
+
+        if(localStorage.getItem('tjkt1_bg')) document.body.style.backgroundImage = `url('${localStorage.getItem('tjkt1_bg')}')`;
+        document.getElementById('bg-upload').addEventListener('change', function(e) {
+            if(e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.body.style.backgroundImage = `url('${event.target.result}')`;
+                    try { localStorage.setItem('tjkt1_bg', event.target.result); } 
+                    catch(err) { alert("File terlalu besar."); }
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        function resetBg() { document.body.style.backgroundImage = "none"; localStorage.removeItem('tjkt1_bg'); document.getElementById('bg-upload').value = ""; }
+
+        // --- TODO LIST ---
+        let todos = JSON.parse(localStorage.getItem('tjkt1_todos')) || [];
+        function renderTodos() {
+            const list = document.getElementById('todo-list'); list.innerHTML = '';
+            todos.forEach((todo, index) => {
+                list.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-secondary-subtle">
+                        <span class="todo-item fw-medium ${todo.done ? 'done' : ''}" onclick="toggleTodo(${index})">
+                            ${todo.done ? '<i class="fas fa-check-circle text-success me-2"></i>' : '<i class="far fa-circle opacity-50 me-2"></i>'} ${todo.text}
+                        </span>
+                        <button class="btn btn-sm btn-outline-danger border-0" onclick="hapusTodo(${index})"><i class="fas fa-trash"></i></button>
+                    </li>`;
+            });
+        }
+        function tambahTodo() {
+            const input = document.getElementById('todo-input');
+            if(input.value.trim()) {
+                todos.push({ text: input.value.trim(), done: false });
+                localStorage.setItem('tjkt1_todos', JSON.stringify(todos));
+                input.value = ''; renderTodos();
+            }
+        }
+        function toggleTodo(index) { todos[index].done = !todos[index].done; localStorage.setItem('tjkt1_todos', JSON.stringify(todos)); renderTodos(); }
+        function hapusTodo(index) { todos.splice(index, 1); localStorage.setItem('tjkt1_todos', JSON.stringify(todos)); renderTodos(); }
+        document.getElementById('todo-input').addEventListener('keypress', function (e) { if (e.key === 'Enter') tambahTodo(); });
+        renderTodos();
+
+        // --- FITUR GALERI (DENGAN KOMPRESI OTOMATIS) ---
+        let galeriData = JSON.parse(localStorage.getItem('tjkt1_galeri')) || [];
+        
+        function renderGaleri() {
+            const grid = document.getElementById('gallery-grid');
+            grid.innerHTML = '';
+            if (galeriData.length === 0) {
+                grid.innerHTML = '<div class="col-12"><p class="text-center opacity-50 my-3">Belum ada foto. Yuk upload foto pertamamu!</p></div>';
+                return;
+            }
+            galeriData.forEach((src, index) => {
+                grid.innerHTML += `
+                    <div class="col">
+                        <div class="gallery-img-container">
+                            <img src="${src}" alt="Foto Galeri" class="gallery-img">
+                            <button class="btn-delete-img" onclick="hapusFoto(${index})" title="Hapus Foto">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Fungsi mengecilkan resolusi dan kualitas foto menggunakan Canvas
+        function kompresFoto(base64Str, maxWidth, callback) {
+            let img = new Image();
+            img.src = base64Str;
+            img.onload = () => {
+                let canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height *= maxWidth / width));
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                let ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                // Kompres kualitas jadi 60% agar hemat penyimpanan
+                callback(canvas.toDataURL('image/jpeg', 0.6)); 
+            };
+        }
+
+        document.getElementById('gallery-upload').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length === 0) return;
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Masukkan ke fungsi kompresor sebelum disimpan
+                    kompresFoto(event.target.result, 600, function(compressedBase64) {
+                        galeriData.push(compressedBase64);
+                        try {
+                            localStorage.setItem('tjkt1_galeri', JSON.stringify(galeriData));
+                            renderGaleri();
+                        } catch(err) {
+                            alert("Penyimpanan penuh! Hapus beberapa foto lama sebelum mengunggah yang baru.");
+                            galeriData.pop(); // Batalkan penambahan foto terakhir
+                        }
+                    });
+                }
+                reader.readAsDataURL(file);
+            });
+            // Reset input agar bisa upload file yang sama berkali-kali jika diperlukan
+            e.target.value = ''; 
+        });
+
+        function hapusFoto(index) {
+            if(confirm("Yakin ingin menghapus foto ini?")) {
+                galeriData.splice(index, 1);
+                localStorage.setItem('tjkt1_galeri', JSON.stringify(galeriData));
+                renderGaleri();
+            }
+        }
+
+        function hapusSemuaGaleri() {
+            if(galeriData.length > 0 && confirm("PERINGATAN: Yakin ingin menghapus SELURUH foto galeri?")) {
+                galeriData = [];
+                localStorage.removeItem('tjkt1_galeri');
+                renderGaleri();
+            }
+        }
+
+        renderGaleri(); // Tampilkan galeri saat halaman dimuat
+    </script>
+</body>
+</html>
