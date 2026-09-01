@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Kelas X TJKT 1 (Online Edition)</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- MENGHUBUNGKAN KE FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        :root, [data-bs-theme="light"] {
+            --glass-bg: rgba(255, 255, 255, 0.75); --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15); --text-main: #212529;
+            --input-bg: rgba(255,255,255,0.7); --body-bg: #f0f2f5;
+        }
+        [data-bs-theme="dark"] {
+            --glass-bg: rgba(33, 37, 41, 0.85); --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); --text-main: #f8f9fa;
+            --input-bg: rgba(0,0,0,0.4); --body-bg: #121212;
+        }
+        body { background-color: var(--body-bg); transition: background 0.5s ease, color 0.3s ease; min-height: 100vh; font-family: 'Segoe UI', sans-serif; color: var(--text-main); }
+        .glass-card { background: var(--glass-bg); backdrop-filter: blur(12px); border-radius: 15px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); margin-bottom: 20px; transition: transform 0.3s ease; }
+        .editable-input { background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--text-main); border-radius: 5px; padding: 6px 10px; width: 100%; }
+        .todo-item { cursor: pointer; } .todo-item.done { text-decoration: line-through; opacity: 0.6; }
+        .sync-badge { font-size: 10px; background: #28a745; color: white; padding: 3px 8px; border-radius: 10px; margin-left: 10px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar sticky-top glass-card py-2 mb-4" style="border-radius: 0 0 15px 15px;">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="m-0 fw-bold text-primary">X TJKT 1 <span class="sync-badge"><i class="fas fa-wifi"></i> Live Sync</span></h2>
+            </div>
+            <div id="clock" class="fw-bold text-primary" style="font-size: 1.2rem;">00:00:00</div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div class="row">
+            <!-- STRUKTUR KELAS ONLINE -->
+            <div class="col-lg-5 mb-4">
+                <div class="glass-card p-4 h-100">
+                    <h5 class="fw-bold mb-3 border-bottom border-secondary pb-2"><i class="fas fa-sitemap text-success me-2"></i>Struktur Kelas (Online)</h5>
+                    <p class="small mb-3 opacity-75">Ketik di sini, semua orang di kelas akan melihat perubahannya secara instan.</p>
+                    
+                    <div class="mb-2"><label class="small fw-bold mb-1 opacity-75">Wali Kelas</label>
+                        <input type="text" class="editable-input struct-input" id="struct-wali" placeholder="Nama..."></div>
+                    <div class="mb-2"><label class="small fw-bold mb-1 opacity-75">Ketua Kelas</label>
+                        <input type="text" class="editable-input struct-input" id="struct-ketua" placeholder="Nama..."></div>
+                    <div class="mb-2"><label class="small fw-bold mb-1 opacity-75">Wakil Ketua</label>
+                        <input type="text" class="editable-input struct-input" id="struct-wakil" placeholder="Nama..."></div>
+                    <div class="mb-2"><label class="small fw-bold mb-1 opacity-75">Sekretaris</label>
+                        <input type="text" class="editable-input struct-input" id="struct-sekretaris" placeholder="Nama..."></div>
+                    <div class="mb-2"><label class="small fw-bold mb-1 opacity-75">Bendahara</label>
+                        <input type="text" class="editable-input struct-input" id="struct-bendahara" placeholder="Nama..."></div>
+                </div>
+            </div>
+
+            <!-- PAPAN TUGAS ONLINE -->
+            <div class="col-lg-7 mb-4">
+                <div class="glass-card p-4 h-100">
+                    <h5 class="fw-bold mb-3 border-bottom border-secondary pb-2"><i class="fas fa-tasks text-warning me-2"></i>Papan Tugas Bersama (Online)</h5>
+                    <div class="d-flex mb-3">
+                        <input type="text" id="todo-input" class="form-control me-2 text-body bg-body" placeholder="Tambah tugas / PR baru untuk kelas...">
+                        <button class="btn btn-primary fw-bold" onclick="tambahTodo()">Tambah</button>
+                    </div>
+                    <ul class="list-group" id="todo-list">
+                        <!-- Data dari Firebase akan muncul di sini -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // ⚠️ MASUKKAN FIREBASE CONFIG KAMU DI SINI
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "KODE_API_KAMU",
+            authDomain: "proyek-kamu.firebaseapp.com",
+            databaseURL: "https://proyek-kamu-default-rtdb.firebaseio.com",
+            projectId: "proyek-kamu",
+            storageBucket: "proyek-kamu.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:12345:web:abcd"
+        };
+        // ==========================================
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 1. SINKRONISASI STRUKTUR KELAS REAL-TIME
+        const structInputs = document.querySelectorAll('.struct-input');
+        
+        // Ketika ada yang mengetik, kirim data ke Firebase
+        structInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                db.ref('kelas_tjkt1/struktur/' + this.id).set(this.value);
+            });
+        });
+
+        // Menerima pembaruan data secara langsung dari internet
+        db.ref('kelas_tjkt1/struktur').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                if(data['struct-wali']) document.getElementById('struct-wali').value = data['struct-wali'];
+                if(data['struct-ketua']) document.getElementById('struct-ketua').value = data['struct-ketua'];
+                if(data['struct-wakil']) document.getElementById('struct-wakil').value = data['struct-wakil'];
+                if(data['struct-sekretaris']) document.getElementById('struct-sekretaris').value = data['struct-sekretaris'];
+                if(data['struct-bendahara']) document.getElementById('struct-bendahara').value = data['struct-bendahara'];
+            }
+        });
+
+        // 2. SINKRONISASI PAPAN TUGAS REAL-TIME
+        let todos = [];
+        
+        function renderTodos() {
+            const list = document.getElementById('todo-list'); list.innerHTML = '';
+            todos.forEach((todo, index) => {
+                list.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-secondary-subtle">
+                        <span class="todo-item fw-medium ${todo.done ? 'done' : ''}" onclick="toggleTodo(${index})">
+                            ${todo.done ? '<i class="fas fa-check-circle text-success me-2"></i>' : '<i class="far fa-circle opacity-50 me-2"></i>'} ${todo.text}
+                        </span>
+                        <button class="btn btn-sm btn-outline-danger border-0" onclick="hapusTodo(${index})"><i class="fas fa-trash"></i></button>
+                    </li>`;
+            });
+        }
+
+        // Menerima data tugas terbaru dari Firebase
+        db.ref('kelas_tjkt1/todos').on('value', (snapshot) => {
+            todos = snapshot.val() || [];
+            renderTodos();
+        });
+
+        function tambahTodo() {
+            const input = document.getElementById('todo-input');
+            if(input.value.trim()) {
+                todos.push({ text: input.value.trim(), done: false });
+                db.ref('kelas_tjkt1/todos').set(todos); // Simpan ke Firebase
+                input.value = '';
+            }
+        }
+
+        function toggleTodo(index) { 
+            todos[index].done = !todos[index].done; 
+            db.ref('kelas_tjkt1/todos').set(todos); // Update ke Firebase
+        }
+        
+        function hapusTodo(index) { 
+            todos.splice(index, 1); 
+            db.ref('kelas_tjkt1/todos').set(todos); // Hapus dari Firebase
+        }
+
+        document.getElementById('todo-input').addEventListener('keypress', function (e) { 
+            if (e.key === 'Enter') tambahTodo(); 
+        });
+
+        // --- JAM REALTIME (Hiasan) ---
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }, 1000);
+    </script>
+</body>
+</html>
